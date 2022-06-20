@@ -2,10 +2,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Product { //Open-closed principle, класс можно рассширить в наследнике, добавляя новую функциональность.
+
     private final String name;
     private final String brand;
     private final int price;
-
     private final Map<Integer, Integer> estimations = new HashMap<>();
     private int rating;
 

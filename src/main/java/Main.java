@@ -24,12 +24,7 @@ public class Main {
 
             @Override
             public Tracking getOrderTracking() {
-                return new Tracking() {
-                    @Override
-                    public String getStatusMessage() {
-                        return "Заказ доставляется, ожидайте";
-                    }
-                };
+                return () -> "Заказ доставляется, ожидайте";
             }
         });
         new UserInterfaceImpl().setShop(shop).startCommunication();

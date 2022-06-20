@@ -8,9 +8,9 @@ public class Shop { //Open-closed principle, класс можно рассши�
     private final Map<Integer, ProductDeliverer> trackingList = new HashMap<>();
     private final List<Product> productRange = new ArrayList<>();
     private final List<Map<Product, Integer>> orderHistory = new ArrayList<>();
-    private final Map<Integer, Integer> warehouse = new HashMap<>();
+    private final Map<Product, Integer> warehouse = new HashMap<>();
     private final Map<Integer, Integer> mapOrdinalNumToIndex = new HashMap<>();
-    private final Map<Integer, Integer> shoppingBasket = new HashMap<>();
+    private final Map<Product, Integer> shoppingBasket = new HashMap<>();
 
     public Shop addSupplier(ProductSupplier supplier) {
         suppliersList.add(supplier);
@@ -23,9 +23,12 @@ public class Shop { //Open-closed principle, класс можно рассши�
     }
 
     public void addProduct(Product product, int num) {
-        productRange.add(product);
-        int index = productRange.size() - 1;
-        warehouse.put(index, num);
+        if (!warehouse.containsKey(product)) {
+            warehouse.put(product, num);
+            productRange.add(product);
+        } else {
+            warehouse.put(product, warehouse.get(product) + num);
+        }
     }
 
     public void fillInAssortment() {
@@ -40,10 +43,11 @@ public class Shop { //Open-closed principle, класс можно рассши�
 
     public void addProductsInShoppingBasket(int ordinalNum, int num) {
         int index = mapOrdinalNumToIndex.get(ordinalNum);
-        if (!shoppingBasket.containsKey(index)) {
-            shoppingBasket.put(index, num);
+        Product product = productRange.get(index);
+        if (!shoppingBasket.containsKey(product)) {
+            shoppingBasket.put(product, num);
         } else {
-            shoppingBasket.put(index, shoppingBasket.get(index) + num);
+            shoppingBasket.put(product, shoppingBasket.get(product) + num);
         }
     }
 
@@ -53,9 +57,9 @@ public class Shop { //Open-closed principle, класс можно рассши�
 
     public void paymentForShoppingBasket() {
         Map<Product, Integer> order = new HashMap<>();
-        for (int index : shoppingBasket.keySet()) {
-            warehouse.put(index, warehouse.get(index) - shoppingBasket.get(index));
-            order.put(productRange.get(index), shoppingBasket.get(index));
+        for (Product product : shoppingBasket.keySet()) {
+            warehouse.put(product, warehouse.get(product) - shoppingBasket.get(product));
+            order.put(product, shoppingBasket.get(product));
         }
         for (ProductDeliverer deliverer : deliverersList) {
             if (deliverer.takeOrder(order)) {
@@ -80,7 +84,8 @@ public class Shop { //Open-closed principle, класс можно рассши�
 
     public int getProductRemainingNumInWarehouse(int ordinalNum) {
         int index = mapOrdinalNumToIndex.get(ordinalNum);
-        return warehouse.get(index) - shoppingBasket.getOrDefault(index, 0);
+        Product product = productRange.get(index);
+        return warehouse.get(product) - shoppingBasket.getOrDefault(product, 0);
     }
 
     public void printProductsInWarehouse() {
@@ -109,7 +114,7 @@ public class Shop { //Open-closed principle, класс можно рассши�
         print(ordinalNum, shoppingBasket, null, false);
     }
 
-    private void print(int ordinalNum, Map<Integer, Integer> productsNumber, String filterSample, boolean lastList) {
+    private void print(int ordinalNum, Map<Product, Integer> productsNumber, String filterSample, boolean lastList) {
         boolean printOrdinalNum = ordinalNum > 0;
         boolean filter = false;
         boolean calculateRemainingProducts = false;
@@ -126,12 +131,12 @@ public class Shop { //Open-closed principle, класс можно рассши�
                 price = Integer.parseInt(filterSample);
             } catch (NumberFormatException ignored) {}
         }
-        System.out.println("  пп  |   наименование   |       бренд       | цена | рейтинг | кол-во ");
+        System.out.println("  пп  |   наименование   |       бренд      | цена | рейтинг | кол-во ");
         System.out.println("-----------------------------------------------------------------------");
         int element = mapOrdinalNumToIndex.getOrDefault(ordinalNum, 0);
         for (int index = element; index < (printOrdinalNum ? element + 1 : productRange.size()); index++) {
             Product product = productRange.get(index);
-            if (warehouse.get(index) < 1) continue;
+            if (warehouse.get(product) < 1) continue;
             if (filter) {
                 if (price > 0) {
                     if (product.getPrice() != price) continue;
@@ -142,12 +147,12 @@ public class Shop { //Open-closed principle, класс можно рассши�
             if (lastList) {
                 if (!mapOrdinalNumToIndex.containsValue(index)) continue;
             }
-            if (!productsNumber.containsKey(index)) continue;
+            if (!productsNumber.containsKey(product)) continue;
             if (!lastList && !printOrdinalNum) {
                 ordinalNum++;
                 mapOrdinalNumToIndex.put(ordinalNum, index);
             }
-            System.out.printf("%3d.  |%2s|%5d\n", ordinalNum, product, productsNumber.get(index) - (calculateRemainingProducts ? shoppingBasket.getOrDefault(index, 0) : 0));
+            System.out.printf("%3d.  |%2s|%5d\n", ordinalNum, product, productsNumber.get(product) - (calculateRemainingProducts ? shoppingBasket.getOrDefault(product, 0) : 0));
         }
         if (mapOrdinalNumToIndex.size() == 0) System.out.println("ПУСТО");
         System.out.println("-----------------------------------------------------------------------");

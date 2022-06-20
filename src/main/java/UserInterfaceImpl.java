@@ -77,7 +77,6 @@ public class UserInterfaceImpl implements UserInterface {
                             messageSelector(++step);
                             return;
                         }
-                        step ++;
                     }
                     case 11 -> {
                         if (input.equalsIgnoreCase("Y")) {
